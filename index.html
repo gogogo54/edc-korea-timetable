@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09051b">
+<title>EDC Korea 2026 Timetable</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">UNDER THE ELECTRIC SKY</div>
+      <h1>EDC KOREA <span>2026</span></h1>
+      <p>10.03 SAT · 10.04 SUN · INSPIRE</p>
+    </div>
+    <button id="installBtn" class="icon-btn" hidden>＋</button>
+  </header>
+
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-copy">
+      <div class="hero-badge">FESTIVAL TIMETABLE</div>
+      <h2>내가 볼 DJ만<br><b>한눈에.</b></h2>
+      <p>날짜 · 시간 · 스테이지 · DJ를 빠르게 확인하고 ⭐로 내 일정을 만들어보세요.</p>
+    </div>
+  </section>
+
+  <div class="sticky-controls">
+    <div class="date-tabs">
+      <button class="date-tab active" data-date="2026-10-03">10/03 <small>SAT</small></button>
+      <button class="date-tab" data-date="2026-10-04">10/04 <small>SUN</small></button>
+    </div>
+    <div class="search-row">
+      <div class="search-box">⌕ <input id="search" placeholder="DJ 이름 검색"></div>
+      <button id="myBtn" class="filter-btn">⭐ 내 일정 <span id="favCount">0</span></button>
+    </div>
+    <div id="stageFilters" class="stage-filters"></div>
+  </div>
+
+  <main>
+    <div class="summary">
+      <div><strong id="resultCount">0</strong><span> SETS</span></div>
+      <div class="hint">카드를 누르면 상세 보기</div>
+    </div>
+    <div id="timeline"></div>
+  </main>
+
+  <section class="poster-section">
+    <div class="section-title"><span>OFFICIAL TIMETABLE</span><button id="posterBtn">크게 보기</button></div>
+    <div class="poster-wrap"><img id="poster" alt="EDC Korea timetable"></div>
+  </section>
+
+  <footer>
+    <strong>EDC KOREA 2026 TIMETABLE</strong>
+    <p>개인용 팬메이드 타임테이블 · 공식 타임테이블 이미지를 기준으로 제작</p>
+    <p><a href="https://korea.edc.com/lineup/set-times/" target="_blank" rel="noopener">공식 Set Times 확인 ↗</a></p>
+  </footer>
+</div>
+
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" id="closeModal"></div>
+  <div class="modal-card">
+    <button class="close" id="closeModal2">×</button>
+    <div id="modalPhoto" class="dj-photo large"></div>
+    <div class="modal-stage" id="modalStage"></div>
+    <h3 id="modalArtist"></h3>
+    <div id="modalTime" class="modal-time"></div>
+    <button id="favModal" class="primary">☆ 내 일정에 추가</button>
+    <p class="note">※ DJ 사진은 실제 이미지 대신 이름 기반 아바타로 시작합니다. 사진 파일을 추가하면 이 영역에 실제 사진을 연결할 수 있습니다.</p>
+  </div>
+</div>
+
+<div id="posterModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" id="closePoster"></div>
+  <div class="poster-modal-card">
+    <button class="close" id="closePoster2">×</button>
+    <img id="posterLarge" alt="Timetable large">
+  </div>
+</div>
+
+<script>
+const SHOWS = [
+  {
+    "id": 1,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "HOHO ONE",
+    "start": "17:00",
+    "end": "18:00"
+  },
+  {
+    "id": 2,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "ASHIKO",
+    "start": "17:00",
+    "end": "18:15"
+  },
+  {
+    "id": 3,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "SSOMBO",
+    "start": "17:00",
+    "end": "18:00"
+  },
+  {
+    "id": 4,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "ONE1",
+    "start": "17:00",
+    "end": "18:15"
+  },
+  {
+    "id": 5,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "HONGTON_E",
+    "start": "17:00",
+    "end": "18:15"
+  },
+  {
+    "id": 6,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "SUNGYOO",
+    "start": "18:00",
+    "end": "19:00"
+  },
+  {
+    "id": 7,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "AUREDE",
+    "start": "18:00",
+    "end": "19:00"
+  },
+  {
+    "id": 8,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "CHEEZ & YUKA",
+    "start": "18:15",
+    "end": "19:15"
+  },
+  {
+    "id": 9,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "DAVICO B3B DEMUK B3B DEPARTS",
+    "start": "18:15",
+    "end": "19:30"
+  },
+  {
+    "id": 10,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "MONSTER",
+    "start": "18:15",
+    "end": "19:30"
+  },
+  {
+    "id": 11,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "MUZIE",
+    "start": "19:00",
+    "end": "20:00"
+  },
+  {
+    "id": 12,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "BASSKRAP",
+    "start": "19:00",
+    "end": "20:00"
+  },
+  {
+    "id": 13,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "WAY2_X",
+    "start": "19:15",
+    "end": "20:15"
+  },
+  {
+    "id": 14,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "YUUKI YOSHIYAMA",
+    "start": "19:30",
+    "end": "20:45"
+  },
+  {
+    "id": 15,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "LOCO SOOUND",
+    "start": "19:30",
+    "end": "20:45"
+  },
+  {
+    "id": 16,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "KREAM",
+    "start": "20:00",
+    "end": "21:00"
+  },
+  {
+    "id": 17,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "OGUZ",
+    "start": "20:00",
+    "end": "21:00"
+  },
+  {
+    "id": 18,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "JESSICA AUDIFFRED",
+    "start": "20:15",
+    "end": "21:15"
+  },
+  {
+    "id": 19,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "33 BELOW",
+    "start": "20:45",
+    "end": "22:00"
+  },
+  {
+    "id": 20,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "BETTER",
+    "start": "20:45",
+    "end": "22:00"
+  },
+  {
+    "id": 21,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "DIMENSION",
+    "start": "21:00",
+    "end": "22:00"
+  },
+  {
+    "id": 22,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "DØMINA",
+    "start": "21:00",
+    "end": "22:00"
+  },
+  {
+    "id": 23,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "WILLIAM BLACK",
+    "start": "21:15",
+    "end": "22:15"
+  },
+  {
+    "id": 24,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "R3HAB",
+    "start": "22:00",
+    "end": "23:07"
+  },
+  {
+    "id": 25,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "ANIME",
+    "start": "22:00",
+    "end": "23:15"
+  },
+  {
+    "id": 26,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "IDEMI",
+    "start": "22:00",
+    "end": "23:15"
+  },
+  {
+    "id": 27,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "SPACE COWBOY",
+    "start": "22:00",
+    "end": "23:15"
+  },
+  {
+    "id": 28,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "ALLEYCVT",
+    "start": "22:15",
+    "end": "23:15"
+  },
+  {
+    "id": 29,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "SUBTRONICS",
+    "start": "23:15",
+    "end": "00:27"
+  },
+  {
+    "id": 30,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "THE OUTLAW",
+    "start": "23:15",
+    "end": "00:15"
+  },
+  {
+    "id": 31,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "BEN NICKY PRESENTS XTREME",
+    "start": "23:15",
+    "end": "00:30"
+  },
+  {
+    "id": 32,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "AYYBO",
+    "start": "23:15",
+    "end": "00:30"
+  },
+  {
+    "id": 33,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "MUZIE",
+    "start": "23:15",
+    "end": "00:30"
+  },
+  {
+    "id": 34,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "SVDDEN DEATH",
+    "start": "00:15",
+    "end": "01:30"
+  },
+  {
+    "id": 35,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "ILLENIUM B2B DABIN",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 36,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "BRENNAN HEART",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 37,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "RIORDAN",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 38,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "ROM&BAAWLA",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 39,
+    "date": "2026-10-03",
+    "stage": "Circuit Grounds",
+    "artist": "SARA LANDRY",
+    "start": "01:30",
+    "end": "03:00"
+  },
+  {
+    "id": 40,
+    "date": "2026-10-03",
+    "stage": "Kinetic Field",
+    "artist": "DJ SNAKE",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 41,
+    "date": "2026-10-03",
+    "stage": "Stereo Bloom",
+    "artist": "COONE",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 42,
+    "date": "2026-10-03",
+    "stage": "Bionic Jungle",
+    "artist": "WAX MOTIF",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 43,
+    "date": "2026-10-03",
+    "stage": "BoomBox ART CAR",
+    "artist": "SIM X PINO",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 44,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "4URA",
+    "start": "17:00",
+    "end": "18:00"
+  },
+  {
+    "id": 45,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "ELIANA",
+    "start": "17:00",
+    "end": "18:00"
+  },
+  {
+    "id": 46,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "CASEPEAT X PURPLE RABBIT",
+    "start": "17:00",
+    "end": "18:00"
+  },
+  {
+    "id": 47,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "SØRÄERE BRØCKEN",
+    "start": "17:00",
+    "end": "18:15"
+  },
+  {
+    "id": 48,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "KYSS",
+    "start": "17:00",
+    "end": "18:15"
+  },
+  {
+    "id": 49,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "SPECT",
+    "start": "18:00",
+    "end": "19:00"
+  },
+  {
+    "id": 50,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "BLOSSO",
+    "start": "18:00",
+    "end": "19:00"
+  },
+  {
+    "id": 51,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "KAGO PENGCHI",
+    "start": "18:00",
+    "end": "19:00"
+  },
+  {
+    "id": 52,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "ZENA",
+    "start": "18:15",
+    "end": "19:30"
+  },
+  {
+    "id": 53,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "HWAI I",
+    "start": "18:15",
+    "end": "19:30"
+  },
+  {
+    "id": 54,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "PLUKO",
+    "start": "19:00",
+    "end": "20:00"
+  },
+  {
+    "id": 55,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "AREA X",
+    "start": "19:00",
+    "end": "20:00"
+  },
+  {
+    "id": 56,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "PAUL EUN",
+    "start": "19:00",
+    "end": "20:00"
+  },
+  {
+    "id": 57,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "ASTRO VOIZE",
+    "start": "19:30",
+    "end": "20:45"
+  },
+  {
+    "id": 58,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "MULE",
+    "start": "19:30",
+    "end": "20:45"
+  },
+  {
+    "id": 59,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "TOKIMONSTA",
+    "start": "20:00",
+    "end": "21:00"
+  },
+  {
+    "id": 60,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "NO1 (HONGJOONG)",
+    "start": "20:00",
+    "end": "21:00"
+  },
+  {
+    "id": 61,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "MATTY RALPH",
+    "start": "20:00",
+    "end": "21:00"
+  },
+  {
+    "id": 62,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "YOUNA",
+    "start": "20:45",
+    "end": "22:00"
+  },
+  {
+    "id": 63,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "DJ HAO",
+    "start": "20:45",
+    "end": "22:00"
+  },
+  {
+    "id": 64,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "ARGY",
+    "start": "21:00",
+    "end": "22:00"
+  },
+  {
+    "id": 65,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "BOU",
+    "start": "21:00",
+    "end": "22:00"
+  },
+  {
+    "id": 66,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "ALY & FILA",
+    "start": "21:00",
+    "end": "22:15"
+  },
+  {
+    "id": 67,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "ALOK",
+    "start": "22:00",
+    "end": "23:15"
+  },
+  {
+    "id": 68,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "KAYZO",
+    "start": "22:00",
+    "end": "23:15"
+  },
+  {
+    "id": 69,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "KWON YEONSU",
+    "start": "22:00",
+    "end": "23:15"
+  },
+  {
+    "id": 70,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "LEVEL UP",
+    "start": "22:05",
+    "end": "23:10"
+  },
+  {
+    "id": 71,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "MARIE VAUNT",
+    "start": "22:15",
+    "end": "23:30"
+  },
+  {
+    "id": 72,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "TROYBOI",
+    "start": "23:10",
+    "end": "00:25"
+  },
+  {
+    "id": 73,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "W&W",
+    "start": "23:15",
+    "end": "00:25"
+  },
+  {
+    "id": 74,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "CHARLIE SPARKS",
+    "start": "23:15",
+    "end": "00:30"
+  },
+  {
+    "id": 75,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "NAN AH",
+    "start": "23:15",
+    "end": "00:30"
+  },
+  {
+    "id": 76,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "COSMIC GATE",
+    "start": "23:30",
+    "end": "00:45"
+  },
+  {
+    "id": 77,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "NICO MORENO",
+    "start": "00:25",
+    "end": "01:40"
+  },
+  {
+    "id": 78,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "FISHER",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 79,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "LILLY PALMER",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 80,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "PONGPONG",
+    "start": "00:30",
+    "end": "01:45"
+  },
+  {
+    "id": 81,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "VINI VICI",
+    "start": "00:45",
+    "end": "01:45"
+  },
+  {
+    "id": 82,
+    "date": "2026-10-04",
+    "stage": "Kinetic Field",
+    "artist": "TIËSTO",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 83,
+    "date": "2026-10-04",
+    "stage": "Circuit Grounds",
+    "artist": "WOOLI",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 84,
+    "date": "2026-10-04",
+    "stage": "Stereo Bloom",
+    "artist": "NIFRA",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 85,
+    "date": "2026-10-04",
+    "stage": "Bionic Jungle",
+    "artist": "999999999",
+    "start": "01:45",
+    "end": "03:00"
+  },
+  {
+    "id": 86,
+    "date": "2026-10-04",
+    "stage": "BoomBox ART CAR",
+    "artist": "KIANN",
+    "start": "01:45",
+    "end": "03:00"
+  }
+];
+const STAGES = ["전체","Kinetic Field","Circuit Grounds","Stereo Bloom","Bionic Jungle","BoomBox ART CAR"];
+let selectedDate = "2026-10-03";
+let selectedStage = "전체";
+let onlyMine = false;
+let favorites = new Set(JSON.parse(localStorage.getItem("edcFavorites") || "[]"));
+let selectedShow = null;
+
+const $ = (s)=>document.querySelector(s);
+const esc = s => s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function saveFav(){ localStorage.setItem("edcFavorites", JSON.stringify([...favorites])); updateFavCount(); }
+function updateFavCount(){ $("#favCount").textContent = favorites.size; }
+
+function initials(name){
+  const clean = name.replace(/B2B|PRESENTS|XTREME/gi,"").trim().split(/\s+/).filter(Boolean);
+  return (clean[0]?.[0] || "D") + (clean[1]?.[0] || "");
+}
+function timeToMin(t){
+  let [h,m] = t.split(":").map(Number);
+  if(h < 5) h += 24;
+  return h*60+m;
+}
+function formatTime(t){ return t; }
+
+function renderStageFilters(){
+  $("#stageFilters").innerHTML = STAGES.map(s =>
+    `<button class="stage-pill ${s===selectedStage?'active':''}" data-stage="${esc(s)}">${esc(s)}</button>`
+  ).join("");
+  document.querySelectorAll(".stage-pill").forEach(b=>b.onclick=()=>{
+    selectedStage=b.dataset.stage; renderStageFilters(); render();
+  });
+}
+function filtered(){
+  const q = $("#search").value.trim().toLowerCase();
+  return SHOWS.filter(x =>
+    x.date===selectedDate &&
+    (selectedStage==="전체" || x.stage===selectedStage) &&
+    (!onlyMine || favorites.has(String(x.id))) &&
+    (!q || x.artist.toLowerCase().includes(q) || x.stage.toLowerCase().includes(q))
+  );
+}
+function render(){
+  const list = filtered();
+  $("#resultCount").textContent = list.length;
+  const groups = {};
+  list.forEach(x => (groups[x.start] ||= []).push(x));
+  const times = Object.keys(groups).sort((a,b)=>timeToMin(a)-timeToMin(b));
+  if(!times.length){
+    $("#timeline").innerHTML = `<div class="empty"><div>⭐</div><h3>조건에 맞는 공연이 없어요</h3><p>검색어 또는 스테이지 필터를 바꿔보세요.</p></div>`;
+    return;
+  }
+  $("#timeline").innerHTML = times.map(time => `
+    <section class="time-group">
+      <div class="time-label"><b>${time}</b><span></span></div>
+      <div class="cards">
+        ${groups[time].map(cardHTML).join("")}
+      </div>
+    </section>`).join("");
+  document.querySelectorAll(".show-card").forEach(c=>c.onclick=()=>openShow(Number(c.dataset.id)));
+}
+function cardHTML(x){
+  const fav = favorites.has(String(x.id));
+  const stageClass = x.stage.toLowerCase().replace(/\s+/g,'-');
+  return `<article class="show-card ${stageClass}" data-id="${x.id}">
+    <div class="dj-photo">${esc(initials(x.artist))}</div>
+    <div class="show-main">
+      <div class="show-stage">${esc(x.stage)}</div>
+      <h3>${esc(x.artist)}</h3>
+      <div class="show-time">${formatTime(x.start)} <span>—</span> ${formatTime(x.end)}</div>
+    </div>
+    <button class="star ${fav?'on':''}" onclick="event.stopPropagation();toggleFav(${x.id})">${fav?'★':'☆'}</button>
+  </article>`;
+}
+function toggleFav(id){
+  const k=String(id); favorites.has(k)?favorites.delete(k):favorites.add(k);
+  saveFav(); render();
+  if(selectedShow && selectedShow.id===id) updateModalFav();
+}
+function openShow(id){
+  selectedShow=SHOWS.find(x=>x.id===id);
+  $("#modalPhoto").textContent=initials(selectedShow.artist);
+  $("#modalStage").textContent=selectedShow.stage;
+  $("#modalArtist").textContent=selectedShow.artist;
+  $("#modalTime").textContent=`${selectedShow.date.slice(5).replace("-",".")} · ${selectedShow.start} — ${selectedShow.end}`;
+  updateModalFav();
+  $("#modal").classList.add("open");
+}
+function updateModalFav(){
+  const on=favorites.has(String(selectedShow.id));
+  $("#favModal").textContent=on?"★ 내 일정에서 제거":"☆ 내 일정에 추가";
+  $("#favModal").classList.toggle("remove",on);
+}
+function closeModal(){ $("#modal").classList.remove("open"); }
+function setPoster(){
+  $("#poster").src = selectedDate==="2026-10-03" ? "assets/edc-10-03.jpg" : "assets/edc-10-04.jpg";
+}
+document.querySelectorAll(".date-tab").forEach(b=>b.onclick=()=>{
+  selectedDate=b.dataset.date;
+  document.querySelectorAll(".date-tab").forEach(x=>x.classList.toggle("active",x===b));
+  setPoster(); render();
+});
+$("#search").addEventListener("input", render);
+$("#myBtn").onclick=()=>{ onlyMine=!onlyMine; $("#myBtn").classList.toggle("active",onlyMine); render(); };
+$("#closeModal").onclick=closeModal; $("#closeModal2").onclick=closeModal;
+$("#favModal").onclick=()=>toggleFav(selectedShow.id);
+$("#posterBtn").onclick=()=>{ $("#posterLarge").src=$("#poster").src; $("#posterModal").classList.add("open"); };
+$("#closePoster").onclick=()=>$("#posterModal").classList.remove("open");
+$("#closePoster2").onclick=()=>$("#posterModal").classList.remove("open");
+
+window.addEventListener("keydown", e=>{if(e.key==="Escape"){closeModal();$("#posterModal").classList.remove("open");}});
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e=>{e.preventDefault();deferredPrompt=e;$("#installBtn").hidden=false;});
+$("#installBtn").onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;}};
+
+renderStageFilters(); updateFavCount(); setPoster(); render();
+</script>
+<script>if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});</script></body>
+</html>
